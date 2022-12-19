@@ -11,7 +11,8 @@
           args="0.000 0.000 0.000 -1.571 0.000 -1.571 camera_color_frame camera_color_optical_frame 100"/>
 
     <!--velodyne-->
-    <include file="$(find velodyne_pointcloud)/launch/32e_points.launch" />
+    <include file="$(find velodyne_pointcloud)/launch/VLP-32C_points.launch" />
+    <!-- <include file="$(find velodyne_pointcloud)/launch/32e_points.launch" /> -->
 
     <!--republish-->
     <node name="republish" type="republish" pkg="image_transport" output="screen"
@@ -28,13 +29,16 @@
     </node>
 
     <!--segmentation-->
-    <node pkg="semantic_segmentation" type="semantic_segmentation.py" name="semantic_segmentation"/>
+    <node pkg="semantic_segmentation" type="semantic_segmentation.py" name="semantic_segmentation">
+        <remap from="/CompressedImage" to="/glasscam/image_raw/compressed" />
+    </node>
+
 
     <!--rviz-->
     <node pkg="rviz" type="rviz" name="rviz" args="-d $(find velodyne_camera_calibration)/config/sensor_fusion.rviz"/>
 
     <!--rosbag play-->
-    <node pkg="rosbag" type="play" name="play" args="/home/amsl/bag_files/data.bag" />
-    <!-- <node pkg="rosbag" type="play" name="play" args="/home/amsl/bag_files/iki1_with_realsense_2022-11-06-11-01-34.bag" /> -->
+    <!-- <node pkg="rosbag" type="play" name="play" args="/home/amsl/bag_files/data.bag" /> -->
+    <node pkg="rosbag" type="play" name="play" args="/home/amsl/bag_files/iki1_with_realsense_2022-11-06-11-01-34.bag" />
 
 </launch>

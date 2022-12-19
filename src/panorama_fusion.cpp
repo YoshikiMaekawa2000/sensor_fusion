@@ -66,7 +66,7 @@ class SensorFusion{
         void sensor_fusion(const sensor_msgs::Image::ConstPtr);
         bool tflistener(std::string target_frame, std::string source_frame);
 
-        cv::point2d  project3dToPixel(sensor_msgs::PointCloud2);
+        cv::Point2d  project3dToPixel(cv::Point3d, cv::Mat);
 };
 
 template<typename T_p>
@@ -124,27 +124,28 @@ bool SensorFusion<T_p>::tflistener(std::string target_frame, std::string source_
 }
 
 template<typename T_p>
-cv::Point2d SensorFusion<T_p>::project3dToPixel(sensor_msgs::PointCloud2 pt)
+cv::Point2d SensorFusion<T_p>::project3dToPixel(cv::Point3d pt, cv::Mat rgb_image)
 {
     cv::Point2d uv;
     float B;
+    float L;
+    float  width = rgb_image.cols;
+    float height = rgb_image.rows;
 
     if(pt.x >= 0)
     {
-        B = M_PI/2 - atan2(pt.y/pt.x);
+        B = M_PI/2 - atan2(pt.x, pt.y);
     }
     else
     {
-        B = -(M_PI/2 - atan2(pt.y/pt.x);
+        B = -(M_PI/2 - atan2(pt.x, pt.y));
     }
+    L = atan2(sqrt(pt.x*pt.x + pt.y*pt.y), pt.z);
 
+    uv.x = width/2 + B*width/2*M_PI;
+    uv.y = height/2 - L*height/M_PI;
 
-
-
-
-
-
-
+    return uv;
 }
 
 
@@ -195,45 +196,31 @@ void SensorFusion<T_p>::sensor_fusion(const sensor_msgs::Image::ConstPtr image)
     for(typename pcl::PointCloud<T_p>::iterator pt=colored_cloud->points.begin(); pt<colored_cloud->points.end(); pt++)
     {
 
-        if((*pt).z<0){
-            (*pt).b = 255;
-            (*pt).g = 0;
-            (*pt).r = 0;
+        cv::Point3d pt_cv((*pt).x, (*pt).y, (*pt).z);
+        cv::Point2d uv;
+        uv = project3dToPixel(pt_cv, rgb_image);
 
-            // cout<<(*pt).z<<endl;
-        }
-        else{
-            cv::Point3d pt_cv((*pt).x, (*pt).y, (*pt).z);
-            cv::Point2d uv;
-            uv = project3dToPixel(pt_cv);
+        if(uv.x>0 && uv.x < rgb_image.cols && uv.y > 0 && uv.y < rgb_image.rows)
+        {
+            // Coloring PointCloud
+            (*pt).b = rgb_image.at<cv::Vec3b>(uv)[0];
+            (*pt).g = rgb_image.at<cv::Vec3b>(uv)[1];
+            (*pt).r = rgb_image.at<cv::Vec3b>(uv)[2];
+            // Projection PointCloud
+            double range = sqrt( pow((*pt).x, 2.0) + pow((*pt).y, 2.0) + pow((*pt).z, 2.0));
+            COLOUR c = GetColour(int(range/20*255.0), 0, 255);
+            cv::circle(projection_image, uv, 1, cv::Scalar(int(255*c.b),int(255*c.g),int(255*c.r)), -1);
 
-            if(uv.x>0 && uv.x < rgb_image.cols && uv.y > 0 && uv.y < rgb_image.rows)
-            {
-                // Coloring PointCloud
-                (*pt).b = rgb_image.at<cv::Vec3b>(uv)[0];
-                (*pt).g = rgb_image.at<cv::Vec3b>(uv)[1];
-                (*pt).r = rgb_image.at<cv::Vec3b>(uv)[2];
-                // Projection PointCloud
-                double range = sqrt( pow((*pt).x, 2.0) + pow((*pt).y, 2.0) + pow((*pt).z, 2.0));
-                COLOUR c = GetColour(int(range/20*255.0), 0, 255);
-                cv::circle(projection_image, uv, 1, cv::Scalar(int(255*c.b),int(255*c.g),int(255*c.r)), -1);
+            //output_data
+            int b=(*pt).b;
+            int g=(*pt).g;
+            int r=(*pt).r;
 
-                //output_data
-                int b=(*pt).b;
-                int g=(*pt).g;
-                int r=(*pt).r;
+            // streambuf* last = cout.rdbuf();
+            // cout.rdbuf(ofs.rdbuf());
 
-                // streambuf* last = cout.rdbuf();
-                // cout.rdbuf(ofs.rdbuf());
-
-                // cout<<(*pt).z<<"\t"<<b<<"\t"<<g<<"\t"<<r<<"\n";
-                // cout.rdbuf(last);
-            }
-            else{
-                (*pt).b = 255;
-                (*pt).g = 255;
-                (*pt).r = 255;
-            }
+            // cout<<(*pt).z<<"\t"<<b<<"\t"<<g<<"\t"<<r<<"\n";
+            // cout.rdbuf(last);
         }
     }
 

@@ -11,7 +11,8 @@
           args="0.000 0.000 0.000 -1.571 0.000 -1.571 camera_color_frame camera_color_optical_frame 100"/>
 
     <!--velodyne-->
-    <include file="$(find velodyne_pointcloud)/launch/32e_points.launch" />
+    <include file="$(find velodyne_pointcloud)/launch/VLP-32C_points.launch" />
+    <!-- <include file="$(find velodyne_pointcloud)/launch/32e_points.launch" /> -->
 
     <!--republish-->
     <!-- <node name="republish" type="republish" pkg="image_transport" output="screen" -->
@@ -29,7 +30,8 @@
 
     <!--segmentation-->
     <node pkg="semantic_segmentation" type="semantic_segmentation.py" name="semantic_segmentation">
-    <remap from="/CompressedImage" to="/equirectangular/image_raw/compressed"/>
+    <!-- <remap from="/CompressedImage" to="/equirectangular/image_raw/compressed"/> -->
+    <remap from="/CompressedImage" to="/grasscam/image_raw/compressed"/>
     <!-- <remap from="/CompressedImage" to="/camera/color/image_raw/compressed"/> -->
     </node>
 
