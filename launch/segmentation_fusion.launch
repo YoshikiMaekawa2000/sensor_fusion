@@ -31,7 +31,8 @@
     <!--segmentation-->
     <node pkg="semantic_segmentation" type="semantic_segmentation.py" name="semantic_segmentation">
     <!-- <remap from="/CompressedImage" to="/equirectangular/image_raw/compressed"/> -->
-    <remap from="/CompressedImage" to="/grasscam/image_raw/compressed"/>
+    <remap from="/CompressedImage" to="/usb_cam/image_raw/compressed"/>
+    <!-- <remap from="/CompressedImage" to="/grasscam/image_raw/compressed"/> -->
     <!-- <remap from="/CompressedImage" to="/camera/color/image_raw/compressed"/> -->
     </node>
 
@@ -40,7 +41,8 @@
     <node pkg="rviz" type="rviz" name="rviz" args="-d $(find velodyne_camera_calibration)/config/sensor_fusion.rviz"/>
 
     <!--rosbag play-->
-    <node pkg="rosbag" type="play" name="play" args="/home/amsl/bag_files/kakunin_theta_2022-09-17-15-19-28.bag" />
+    <node pkg="rosbag" type="play" name="play" args="/home/amsl/bag_files/2021-10-24-11-30-05.bag" />
+    <!-- <node pkg="rosbag" type="play" name="play" args="/home/amsl/bag_files/kakunin_theta_2022-09-17-15-19-28.bag" /> -->
     <!-- <node pkg="rosbag" type="play" name="play" args="/home/amsl/bag_files/data.bag" /> -->
 
 </launch>
