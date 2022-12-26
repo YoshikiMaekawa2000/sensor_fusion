@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>velodyne_camera_calibration</name>
+  <name>sensor_fusion</name>
   <version>0.0.0</version>
   <description>The velodyne_camera_calibration package</description>
 
