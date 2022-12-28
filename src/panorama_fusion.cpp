@@ -127,23 +127,36 @@ template<typename T_p>
 cv::Point2d SensorFusion<T_p>::project3dToPixel(cv::Point3d pt, cv::Mat rgb_image)
 {
     cv::Point2d uv;
+    float f=1.906;
+    float angle_range = 40*M_PI/180;
+    float angle_max = 15*M_PI/180;
+    float angle_min = -25*M_PI/180;
     float B;
     float L;
-    float  width = rgb_image.cols;
+    float width = rgb_image.cols;
     float height = rgb_image.rows;
+    float D=sqrt(pt.x*pt.x + pt.y*pt.y + pt.z*pt.z);
+    float x=pt.x*f/D;
+    float y=pt.y*f/D;
+    float z=pt.z*f/D;
 
-    if(pt.x >= 0)
-    {
-        B = M_PI/2 - atan2(pt.x, pt.y);
+    B = atan2(y, x);
+    B+=M_PI;
+    if(B<0){
+        B=0;
     }
-    else
-    {
-        B = -(M_PI/2 - atan2(pt.x, pt.y));
+    else if(B>2*M_PI){
+        B=2*M_PI;
     }
-    L = atan2(sqrt(pt.x*pt.x + pt.y*pt.y), pt.z);
+    L = acos(z/f);
+    L -= M_PI/2 - angle_max;
+    L *= 180/30;
+    if(L<0){
+        L=0;
+    }
 
-    uv.x = width/2 + B*width/2*M_PI;
-    uv.y = height/2 - L*height/M_PI;
+    uv.x = int(B*width/(2*M_PI));
+    uv.y = int(L*height/M_PI);
 
     return uv;
 }
@@ -198,75 +211,33 @@ void SensorFusion<T_p>::sensor_fusion(const sensor_msgs::Image::ConstPtr image)
 
         cv::Point3d pt_cv((*pt).x, (*pt).y, (*pt).z);
         cv::Point2d uv;
+
         uv = project3dToPixel(pt_cv, rgb_image);
 
-        if(uv.x>0 && uv.x < rgb_image.cols && uv.y > 0 && uv.y < rgb_image.rows)
+        if(uv.x>=0 && uv.x <= rgb_image.cols && uv.y >= 0 && uv.y <= rgb_image.rows)
         {
+
             // Coloring PointCloud
             (*pt).b = rgb_image.at<cv::Vec3b>(uv)[0];
             (*pt).g = rgb_image.at<cv::Vec3b>(uv)[1];
             (*pt).r = rgb_image.at<cv::Vec3b>(uv)[2];
             // Projection PointCloud
-            double range = sqrt( pow((*pt).x, 2.0) + pow((*pt).y, 2.0) + pow((*pt).z, 2.0));
-            COLOUR c = GetColour(int(range/20*255.0), 0, 255);
-            cv::circle(projection_image, uv, 1, cv::Scalar(int(255*c.b),int(255*c.g),int(255*c.r)), -1);
+            // double range = sqrt( pow((*pt).x, 2.0) + pow((*pt).y, 2.0) + pow((*pt).z, 2.0));
+            // COLOUR c = GetColour(int(range/20*255.0), 0, 255);
+            // cv::circle(projection_image, uv, 1, cv::Scalar(int(255*c.b),int(255*c.g),int(255*c.r)), -1);
 
-            //output_data
-            int b=(*pt).b;
-            int g=(*pt).g;
-            int r=(*pt).r;
+            projection_image.at<cv::Vec3b>(uv)[0]=255;
+            projection_image.at<cv::Vec3b>(uv)[1]=255;
+            projection_image.at<cv::Vec3b>(uv)[2]=255;
 
-            // streambuf* last = cout.rdbuf();
-            // cout.rdbuf(ofs.rdbuf());
-
-            // cout<<(*pt).z<<"\t"<<b<<"\t"<<g<<"\t"<<r<<"\n";
-            // cout.rdbuf(last);
+        }
+        else{
+            (*pt).b = 0;
+            (*pt).g = 0;
+            (*pt).r = 0;
         }
     }
 
-    // for(typename pcl::PointCloud<T_p>::iterator pt=colored_cloud->points.begin(); pt<colored_cloud->points.end(); pt++)
-    // {
-    //
-    //     if((*pt).z<0){
-    //         (*pt).b = 255;
-    //         (*pt).g = 255;
-    //         (*pt).r = 255;
-    //     }
-    //     else{
-    //         cv::Point3d pt_cv((*pt).x, (*pt).y, (*pt).z);
-    //         cv::Point2d uv;
-    //         uv = cam_model.project3dToPixel(pt_cv);
-    //
-    //         if(uv.x>0 && uv.x < rgb_image.cols && uv.y > 0 && uv.y < rgb_image.rows)
-    //         {
-    //             // Coloring PointCloud
-    //             (*pt).b = rgb_image.at<cv::Vec3b>(uv)[0];
-    //             (*pt).g = rgb_image.at<cv::Vec3b>(uv)[1];
-    //             (*pt).r = rgb_image.at<cv::Vec3b>(uv)[2];
-    //             // Projection PointCloud
-    //             double range = sqrt( pow((*pt).x, 2.0) + pow((*pt).y, 2.0) + pow((*pt).z, 2.0));
-    //             COLOUR c = GetColour(int(range/20*255.0), 0, 255);
-    //             cv::circle(projection_image, uv, 1, cv::Scalar(int(255*c.b),int(255*c.g),int(255*c.r)), -1);
-    //
-    //             //output_data
-    //             int b=(*pt).b;
-    //             int g=(*pt).g;
-    //             int r=(*pt).r;
-    //
-    //             streambuf* last = cout.rdbuf();
-    //             cout.rdbuf(ofs.rdbuf());
-    //
-    //             cout<<(*pt).z<<"\t"<<b<<"\t"<<g<<"\t"<<r<<"\n";
-    //             cout.rdbuf(last);
-    //         }
-    //         else{
-    //             (*pt).b = 255;
-    //             (*pt).g = 255;
-    //             (*pt).r = 255;
-    //         }
-    //     }
-    // }
-    //
     // transform pointcloud from camera_frame to lidar_frame
     typename pcl::PointCloud<T_p>::Ptr output_cloud(new pcl::PointCloud<T_p>);
     pcl_ros::transformPointCloud(*colored_cloud, *output_cloud, tf.inverse());
