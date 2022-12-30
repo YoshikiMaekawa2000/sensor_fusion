@@ -13,7 +13,7 @@
     <!-- <node pkg="tf" type="static_transform_publisher" name="velodyne2thetas" -->
           <!-- args="0.0 0.0 -1.0 -4.1784355849661545e-02 6.2748232995557610e-02 -4.7148157015502096e-02 1.1035171635758418e-02 velodyne camera 100" /> -->
     <node pkg="tf" type="static_transform_publisher" name="velodyne2thetas"
-          args="0.0 0.0 -0.223 0.0 0.0 0.0 velodyne camera 100" />
+        args="0.0 0.0 -0.223 0.0 0.0 0.0 velodyne camera 100" />
     <!-- velodyne -->
     <include file="$(find velodyne_pointcloud)/launch/VLP-32C_points.launch" />
 
@@ -33,10 +33,10 @@
     </node>
 
     <!--segmentation-->
-    <!-- <node pkg="semantic_segmentation" type="semantic_segmentation.py" name="semantic_segmentation"> -->
-    <!--     <remap from="/CompressedImage" to="/equirectangular/image_raw/compressed"/> -->
-    <!-- &#60;&#33;&#45;&#45; <remap from="/CompressedImage" to="/camera/color/image_raw/compressed"/> &#45;&#45;&#62; -->
-    <!-- </node> -->
+    <node pkg="semantic_segmentation" type="semantic_segmentation.py" name="semantic_segmentation">
+        <remap from="/CompressedImage" to="/equirectangular/image_raw/compressed"/>
+    <!-- <remap from="/CompressedImage" to="/camera/color/image_raw/compressed"/> -->
+    </node>
 
 
     <!--rviz-->

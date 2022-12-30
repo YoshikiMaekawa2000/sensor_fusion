@@ -128,9 +128,9 @@ cv::Point2d SensorFusion<T_p>::project3dToPixel(cv::Point3d pt, cv::Mat rgb_imag
 {
     cv::Point2d uv;
     float f=1.906;
-    float angle_range = 40*M_PI/180;
+    // float angle_range = 40*M_PI/180;
     float angle_max = 15*M_PI/180;
-    float angle_min = -25*M_PI/180;
+    // float angle_min = -25*M_PI/180;
     float B;
     float L;
     float width = rgb_image.cols;
@@ -140,17 +140,11 @@ cv::Point2d SensorFusion<T_p>::project3dToPixel(cv::Point3d pt, cv::Mat rgb_imag
     float y=pt.y*f/D;
     float z=pt.z*f/D;
 
-    B = atan2(y, x);
-    B+=M_PI;
-    if(B<0){
-        B=0;
-    }
-    else if(B>2*M_PI){
-        B=2*M_PI;
-    }
+
+    B = M_PI -atan2(y, x);
     L = acos(z/f);
     L -= M_PI/2 - angle_max;
-    L *= 180/30;
+    L *= 180/40;
     if(L<0){
         L=0;
     }
@@ -193,8 +187,8 @@ void SensorFusion<T_p>::sensor_fusion(const sensor_msgs::Image::ConstPtr image)
 
     // Realsense Data is saved BGR. change BGR to RGB
     cv::Mat rgb_image;
-    // rgb_image = cv_image;
-    cv::cvtColor(cv_image ,rgb_image, CV_BGR2RGB);
+    rgb_image = cv_image;
+    // cv::cvtColor(cv_image ,rgb_image, CV_BGR2RGB);
 
     // set PinholeCameraModel
     image_geometry::PinholeCameraModel cam_model;
@@ -214,28 +208,41 @@ void SensorFusion<T_p>::sensor_fusion(const sensor_msgs::Image::ConstPtr image)
 
         uv = project3dToPixel(pt_cv, rgb_image);
 
-        if(uv.x>=0 && uv.x <= rgb_image.cols && uv.y >= 0 && uv.y <= rgb_image.rows)
-        {
+        // float f=1.906;
+        // float D=sqrt((*pt).x*(*pt).x + (*pt).y*(*pt).y + (*pt).z*(*pt).z);
+        // (*pt).x=(*pt).x*f/D;
+        // (*pt).y=(*pt).y*f/D;
+        // (*pt).z=(*pt).z*f/D;
+        // if((*pt).x <0 ){
+        //     (*pt).b = 0;
+        //     (*pt).g = 0;
+        //     (*pt).r = 0;
+        // } else {
 
-            // Coloring PointCloud
-            (*pt).b = rgb_image.at<cv::Vec3b>(uv)[0];
-            (*pt).g = rgb_image.at<cv::Vec3b>(uv)[1];
-            (*pt).r = rgb_image.at<cv::Vec3b>(uv)[2];
-            // Projection PointCloud
-            // double range = sqrt( pow((*pt).x, 2.0) + pow((*pt).y, 2.0) + pow((*pt).z, 2.0));
-            // COLOUR c = GetColour(int(range/20*255.0), 0, 255);
-            // cv::circle(projection_image, uv, 1, cv::Scalar(int(255*c.b),int(255*c.g),int(255*c.r)), -1);
 
-            projection_image.at<cv::Vec3b>(uv)[0]=255;
-            projection_image.at<cv::Vec3b>(uv)[1]=255;
-            projection_image.at<cv::Vec3b>(uv)[2]=255;
+            if(uv.x>=0 && uv.x <= rgb_image.cols && uv.y >= 0 && uv.y <= rgb_image.rows)
+            {
 
-        }
-        else{
-            (*pt).b = 0;
-            (*pt).g = 0;
-            (*pt).r = 0;
-        }
+                // Coloring PointCloud
+                (*pt).b = rgb_image.at<cv::Vec3b>(uv)[0];
+                (*pt).g = rgb_image.at<cv::Vec3b>(uv)[1];
+                (*pt).r = rgb_image.at<cv::Vec3b>(uv)[2];
+                // Projection PointCloud
+                // double range = sqrt( pow((*pt).x, 2.0) + pow((*pt).y, 2.0) + pow((*pt).z, 2.0));
+                // COLOUR c = GetColour(int(range/20*255.0), 0, 255);
+                // cv::circle(projection_image, uv, 1, cv::Scalar(int(255*c.b),int(255*c.g),int(255*c.r)), -1);
+
+                projection_image.at<cv::Vec3b>(uv)[0]=255;
+                projection_image.at<cv::Vec3b>(uv)[1]=255;
+                projection_image.at<cv::Vec3b>(uv)[2]=255;
+
+            }
+            else{
+                (*pt).b = 255;
+                (*pt).g = 255;
+                (*pt).r = 255;
+            }
+        // }
     }
 
     // transform pointcloud from camera_frame to lidar_frame
